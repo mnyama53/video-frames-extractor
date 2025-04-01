@@ -18,7 +18,6 @@
             position: relative;
         }
 
-        /* Particle background */
         #particles {
             position: fixed;
             top: 0;
@@ -282,8 +281,8 @@
                 videoPlayer.src = videoBlob;
                 
                 videoPlayer.onloadedmetadata = () => {
-                    if (videoPlayer.duration > 600) {
-                        status.textContent = 'Error: Video exceeds 10 minute maximum length';
+                    if (videoPlayer.duration > 10800) { // 180 minutes = 10,800 seconds
+                        status.textContent = 'Error: Video exceeds 180 minute maximum length';
                         videoPlayer.src = '';
                         videoInput.value = '';
                     } else {
