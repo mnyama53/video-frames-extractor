@@ -65,6 +65,12 @@
             align-items: center;
         }
 
+        .time-inputs, .frame-rate-control, .interval-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         input[type="file"] {
             padding: 10px;
             background: #2a2a2a;
@@ -75,12 +81,6 @@
         input[type="file"]:hover {
             background: #404040;
             transform: scale(1.05);
-        }
-
-        .frame-rate-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         input[type="number"] {
@@ -194,7 +194,6 @@
             100% { transform: scale(1); }
         }
 
-        /* Accessibility and SEO */
         label, p {
             font-size: 1em;
         }
@@ -207,7 +206,6 @@
             display: block;
         }
 
-        /* Hidden content for SEO */
         .seo-content {
             display: none;
         }
@@ -227,10 +225,28 @@
                     <input type="file" id="videoInput" accept="video/*" aria-describedby="videoInputHelp">
                     <small id="videoInputHelp">Supports videos up to 180 minutes in any format</small>
                 </div>
-                <div class="frame-rate-control">
-                    <label for="frameRate">Frames per Second (FPS):</label>
-                    <input type="number" id="frameRate" min="1" max="10" value="1" aria-describedby="frameRateHelp">
-                    <small id="frameRateHelp">Choose between 1-10 FPS</small>
+                <div class="time-inputs">
+                    <label>Start Time:</label>
+                    <input type="number" id="startHours" min="0" value="0" placeholder="H" aria-label="Start time hours">
+                    <span>h</span>
+                    <input type="number" id="startMinutes" min="0" max="59" value="0" placeholder="M" aria-label="Start time minutes">
+                    <span>m</span>
+                    <input type="number" id="startSeconds" min="0" max="59" value="0" placeholder="S" aria-label="Start time seconds">
+                    <span>s</span>
+                </div>
+                <div class="time-inputs">
+                    <label>End Time:</label>
+                    <input type="number" id="endHours" min="0" value="0" placeholder="H" aria-label="End time hours">
+                    <span>h</span>
+                    <input type="number" id="endMinutes" min="0" max="59" value="0" placeholder="M" aria-label="End time minutes">
+                    <span>m</span>
+                    <input type="number" id="endSeconds" min="0" max="59" value="0" placeholder="S" aria-label="End time seconds">
+                    <span>s</span>
+                </div>
+                <div class="interval-control">
+                    <label for="frameInterval">Frame Interval (seconds):</label>
+                    <input type="number" id="frameInterval" min="1" max="10" value="1" aria-describedby="frameIntervalHelp">
+                    <small id="frameIntervalHelp">Extract a frame every 1-10 seconds</small>
                 </div>
                 <button onclick="processVideo()" aria-label="Extract frames from the uploaded video">Extract Frames</button>
             </section>
@@ -244,7 +260,7 @@
         </main>
         <footer class="seo-content">
             <h2>About Video Frame Extractor</h2>
-            <p>Our Video Frame Extractor is a free, browser-based tool that allows you to extract frames from videos up to 180 minutes long. With a sleek dark mode interface, interactive animations, and a dynamic particle background, it offers a seamless user experience. Extract frames at your desired FPS, preview them, and download them as JPEG images with ease.</p>
+            <p>Our Video Frame Extractor is a free, browser-based tool that allows you to extract frames from videos up to 180 minutes long. With a sleek dark mode interface, interactive animations, and a dynamic particle background, it offers a seamless user experience. Extract frames at your desired interval, preview them, and download them as JPEG images with ease.</p>
         </footer>
     </div>
 
@@ -310,9 +326,16 @@
         const videoPlayer = document.getElementById('videoPlayer');
         const frameContainer = document.getElementById('frameContainer');
         const status = document.getElementById('status');
-        const frameRateInput = document.getElementById('frameRate');
+        const startHoursInput = document.getElementById('startHours');
+        const startMinutesInput = document.getElementById('startMinutes');
+        const startSecondsInput = document.getElementById('startSeconds');
+        const endHoursInput = document.getElementById('endHours');
+        const endMinutesInput = document.getElementById('endMinutes');
+        const endSecondsInput = document.getElementById('endSeconds');
+        const frameIntervalInput = document.getElementById('frameInterval');
 
         let videoBlob;
+        let videoDuration = 0;
 
         videoInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -321,12 +344,21 @@
                 videoPlayer.src = videoBlob;
                 
                 videoPlayer.onloadedmetadata = () => {
-                    if (videoPlayer.duration > 10800) {
+                    videoDuration = videoPlayer.duration;
+                    if (videoDuration > 10800) {
                         status.textContent = 'Error: Video exceeds 180 minute maximum length';
                         videoPlayer.src = '';
                         videoInput.value = '';
                     } else {
-                        status.textContent = `Video loaded (${Math.floor(videoPlayer.duration)} seconds)`;
+                        status.textContent = `Video loaded (${Math.floor(videoDuration)} seconds)`;
+                        // Set max values for end time inputs based on video duration
+                        const maxHours = Math.floor(videoDuration / 3600);
+                        const remainingSeconds = videoDuration % 3600;
+                        const maxMinutes = Math.floor(remainingSeconds / 60);
+                        const maxSeconds = Math.floor(remainingSeconds % 60);
+                        endHoursInput.max = maxHours;
+                        endMinutesInput.max = maxHours > 0 ? 59 : maxMinutes;
+                        endSecondsInput.max = maxMinutes > 0 ? 59 : maxSeconds;
                     }
                 };
             }
@@ -338,21 +370,45 @@
                 return;
             }
 
+            // Get start and end times in seconds
+            const startHours = parseInt(startHoursInput.value) || 0;
+            const startMinutes = parseInt(startMinutesInput.value) || 0;
+            const startSeconds = parseInt(startSecondsInput.value) || 0;
+            const endHours = parseInt(endHoursInput.value) || 0;
+            const endMinutes = parseInt(endMinutesInput.value) || 0;
+            const endSeconds = parseInt(endSecondsInput.value) || 0;
+
+            const startTime = (startHours * 3600) + (startMinutes * 60) + startSeconds;
+            const endTime = (endHours * 3600) + (endMinutes * 60) + endSeconds;
+
+            // Validate time range
+            if (startTime >= endTime) {
+                status.textContent = 'Error: Start time must be less than end time';
+                return;
+            }
+            if (endTime > videoDuration) {
+                status.textContent = `Error: End time exceeds video duration (${Math.floor(videoDuration)} seconds)`;
+                return;
+            }
+
+            const frameInterval = parseInt(frameIntervalInput.value);
+            const duration = endTime - startTime;
+            const totalFrames = Math.floor(duration / frameInterval);
+
             frameContainer.innerHTML = '';
             status.textContent = 'Processing video...';
             status.classList.add('processing');
             
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            const frameRate = parseInt(frameRateInput.value);
-            const totalFrames = Math.floor(videoPlayer.duration * frameRate);
-
             canvas.width = videoPlayer.videoWidth;
             canvas.height = videoPlayer.videoHeight;
 
             try {
-                for (let i = 0; i < totalFrames; i++) {
-                    const time = i / frameRate;
+                for (let i = 0; i <= totalFrames; i++) {
+                    const time = startTime + (i * frameInterval);
+                    if (time > endTime) break;
+
                     videoPlayer.currentTime = time;
 
                     await new Promise(resolve => {
@@ -383,7 +439,7 @@
                     frameDiv.appendChild(downloadBtn);
                     frameContainer.appendChild(frameDiv);
 
-                    status.textContent = `Processing: ${Math.round((i + 1) / totalFrames * 100)}% complete`;
+                    status.textContent = `Processing: ${Math.round((i + 1) / (totalFrames + 1) * 100)}% complete`;
                 }
                 
                 status.textContent = 'Processing complete!';
