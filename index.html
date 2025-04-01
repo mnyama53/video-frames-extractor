@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Frame Extractor</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Particle background */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle, rgba(40,40,40,0.8) 0%, #1a1a1a 100%);
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            background: rgba(30, 30, 30, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            animation: glow 2s infinite alternate;
+            margin: 0 0 20px;
+            font-size: 2.5em;
+            letter-spacing: 2px;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #fff, 0 0 10px #404040; }
+            to { text-shadow: 0 0 15px #fff, 0 0 25px #606060, 0 0 35px #808080; }
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            background: #404040;
+            transform: scale(1.05);
+        }
+
+        .frame-rate-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            padding: 8px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:hover, input[type="number"]:focus {
+            background: #404040;
+            border-color: #606060;
+            transform: scale(1.05);
+        }
+
+        button {
+            background: linear-gradient(45deg, #404040, #606060);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: scale(1.1) rotate(2deg);
+            background: linear-gradient(45deg, #606060, #808080);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        #videoPlayer {
+            max-width: 100%;
+            background-color: #000;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #videoPlayer:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+        }
+
+        #frameContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .frame-item {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            animation: bounceIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .frame-item:hover {
+            transform: translateY(-10px) rotate(1deg);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3) translateY(50px); }
+            60% { opacity: 1; transform: scale(1.05); }
+            100% { transform: scale(1) translateY(0); }
+        }
+
+        .frame-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .frame-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .download-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 0.9em;
+        }
+
+        #status {
+            color: #888;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        #status.processing {
+            color: #fff;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <div class="container">
+        <h1>Video Frame Extractor</h1>
+        <div class="controls">
+            <input type="file" id="videoInput" accept="video/*">
+            <div class="frame-rate-control">
+                <label for="frameRate">FPS:</label>
+                <input type="number" id="frameRate" min="1" max="10" value="1">
+            </div>
+            <button onclick="processVideo()">Extract Frames</button>
+        </div>
+        <div id="status"></div>
+        <video id="videoPlayer" controls></video>
+        <div id="frameContainer"></div>
+    </div>
+
+    <script>
+        // Particle System
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 5 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.size > 0.2) this.size -= 0.01;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].size <= 0.2) {
+                    particles.splice(i, 1);
+                    i--;
+                    particles.push(new Particle());
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        initParticles();
+        animateParticles();
+
+        // Video Processing
+        const videoInput = document.getElementById('videoInput');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const frameContainer = document.getElementById('frameContainer');
+        const status = document.getElementById('status');
+        const frameRateInput = document.getElementById('frameRate');
+
+        let videoBlob;
+
+        videoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                videoBlob = URL.createObjectURL(file);
+                videoPlayer.src = videoBlob;
+                
+                videoPlayer.onloadedmetadata = () => {
+                    if (videoPlayer.duration > 600) {
+                        status.textContent = 'Error: Video exceeds 10 minute maximum length';
+                        videoPlayer.src = '';
+                        videoInput.value = '';
+                    } else {
+                        status.textContent = `Video loaded (${Math.floor(videoPlayer.duration)} seconds)`;
+                    }
+                };
+            }
+        });
+
+        async function processVideo() {
+            if (!videoBlob) {
+                status.textContent = 'Please select a video first';
+                return;
+            }
+
+            frameContainer.innerHTML = '';
+            status.textContent = 'Processing video...';
+            status.classList.add('processing');
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const frameRate = parseInt(frameRateInput.value);
+            const totalFrames = Math.floor(videoPlayer.duration * frameRate);
+
+            canvas.width = videoPlayer.videoWidth;
+            canvas.height = videoPlayer.videoHeight;
+
+            try {
+                for (let i = 0; i < totalFrames; i++) {
+                    const time = i / frameRate;
+                    videoPlayer.currentTime = time;
+
+                    await new Promise(resolve => {
+                        videoPlayer.onseeked = () => resolve();
+                    });
+
+                    ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+                    const imageData = canvas.toDataURL('image/jpeg');
+                    
+                    const frameDiv = document.createElement('div');
+                    frameDiv.className = 'frame-item';
+                    
+                    const img = document.createElement('img');
+                    img.src = imageData;
+                    
+                    const timeLabel = document.createElement('p');
+                    timeLabel.textContent = `Time: ${time.toFixed(2)}s`;
+                    
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.textContent = 'Download';
+                    downloadBtn.className = 'download-btn';
+                    downloadBtn.onclick = () => downloadFrame(imageData, time);
+                    
+                    frameDiv.appendChild(img);
+                    frameDiv.appendChild(timeLabel);
+                    frameDiv.appendChild(downloadBtn);
+                    frameContainer.appendChild(frameDiv);
+
+                    status.textContent = `Processing: ${Math.round((i + 1) / totalFrames * 100)}% complete`;
+                }
+                
+                status.textContent = 'Processing complete!';
+                status.classList.remove('processing');
+            } catch (error) {
+                status.textContent = `Error: ${error.message}`;
+                status.classList.remove('processing');
+            }
+        }
+
+        function downloadFrame(imageData, time) {
+            const link = document.createElement('a');
+            link.download = `frame_${time.toFixed(2)}s.jpg`;
+            link.href = imageData;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (videoBlob) {
+                URL.revokeObjectURL(videoBlob);
+            }
+        });
+    </script>
+</body>
+</html>
