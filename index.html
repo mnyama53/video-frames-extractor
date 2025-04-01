@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Frame Extractor</title>
+    <meta name="description" content="Extract frames from videos up to 180 minutes with our free, browser-based tool. Features dark mode, interactive animations, and easy downloads.">
+    <meta name="keywords" content="video frame extractor, extract video frames, video to images, browser-based video tool, dark mode video editor">
+    <meta name="author" content="Your Name or Organization">
+    <meta name="robots" content="index, follow">
+    <title>Video Frame Extractor - Extract Frames from Videos Easily</title>
     <style>
         body {
             background-color: #1a1a1a;
@@ -189,23 +193,59 @@
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+
+        /* Accessibility and SEO */
+        label, p {
+            font-size: 1em;
+        }
+
+        button, input {
+            cursor: pointer;
+        }
+
+        img {
+            display: block;
+        }
+
+        /* Hidden content for SEO */
+        .seo-content {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <canvas id="particles"></canvas>
+    <canvas id="particles" aria-hidden="true"></canvas>
     <div class="container">
-        <h1>Video Frame Extractor</h1>
-        <div class="controls">
-            <input type="file" id="videoInput" accept="video/*">
-            <div class="frame-rate-control">
-                <label for="frameRate">FPS:</label>
-                <input type="number" id="frameRate" min="1" max="10" value="1">
-            </div>
-            <button onclick="processVideo()">Extract Frames</button>
-        </div>
-        <div id="status"></div>
-        <video id="videoPlayer" controls></video>
-        <div id="frameContainer"></div>
+        <header>
+            <h1>Video Frame Extractor</h1>
+            <p>Extract frames from videos up to 180 minutes with ease</p>
+        </header>
+        <main>
+            <section class="controls" aria-label="Video upload and frame extraction controls">
+                <div>
+                    <label for="videoInput">Upload Video:</label>
+                    <input type="file" id="videoInput" accept="video/*" aria-describedby="videoInputHelp">
+                    <small id="videoInputHelp">Supports videos up to 180 minutes in any format</small>
+                </div>
+                <div class="frame-rate-control">
+                    <label for="frameRate">Frames per Second (FPS):</label>
+                    <input type="number" id="frameRate" min="1" max="10" value="1" aria-describedby="frameRateHelp">
+                    <small id="frameRateHelp">Choose between 1-10 FPS</small>
+                </div>
+                <button onclick="processVideo()" aria-label="Extract frames from the uploaded video">Extract Frames</button>
+            </section>
+            <section>
+                <div id="status" role="status" aria-live="polite"></div>
+                <video id="videoPlayer" controls aria-label="Video preview"></video>
+            </section>
+            <section id="frameContainer" aria-label="Extracted video frames">
+                <!-- Frames will be dynamically added here -->
+            </section>
+        </main>
+        <footer class="seo-content">
+            <h2>About Video Frame Extractor</h2>
+            <p>Our Video Frame Extractor is a free, browser-based tool that allows you to extract frames from videos up to 180 minutes long. With a sleek dark mode interface, interactive animations, and a dynamic particle background, it offers a seamless user experience. Extract frames at your desired FPS, preview them, and download them as JPEG images with ease.</p>
+        </footer>
     </div>
 
     <script>
@@ -281,7 +321,7 @@
                 videoPlayer.src = videoBlob;
                 
                 videoPlayer.onloadedmetadata = () => {
-                    if (videoPlayer.duration > 10800) { // 180 minutes = 10,800 seconds
+                    if (videoPlayer.duration > 10800) {
                         status.textContent = 'Error: Video exceeds 180 minute maximum length';
                         videoPlayer.src = '';
                         videoInput.value = '';
@@ -327,6 +367,7 @@
                     
                     const img = document.createElement('img');
                     img.src = imageData;
+                    img.alt = `Video frame at ${time.toFixed(2)} seconds`;
                     
                     const timeLabel = document.createElement('p');
                     timeLabel.textContent = `Time: ${time.toFixed(2)}s`;
@@ -334,6 +375,7 @@
                     const downloadBtn = document.createElement('button');
                     downloadBtn.textContent = 'Download';
                     downloadBtn.className = 'download-btn';
+                    downloadBtn.setAttribute('aria-label', `Download frame at ${time.toFixed(2)} seconds`);
                     downloadBtn.onclick = () => downloadFrame(imageData, time);
                     
                     frameDiv.appendChild(img);
