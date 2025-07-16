@@ -363,7 +363,7 @@
                         <span>m</span>
                         <input type="number" id="endSeconds" min="0" max="59" value="0" placeholder="S" aria-label="End time seconds">
                         <span>s</span>
-                    </div>
+                    </div Fifteen:
                 </div>
                 <div class="control-group">
                     <label for="frameInterval">Frame Interval (seconds):</label>
@@ -400,7 +400,7 @@
     <script>
         // Browser Compatibility Check
         if (!window.URL || !window.URL.createObjectURL || !HTMLCanvasElement.prototype.getContext || !window.FileReader) {
-            document.body.innerHTML = '<div style="text-align: center; padding: 20px; color: red;"><h1>Unsupported Browser</h1><p>Please use a modern browser like Chrome, Firefox, or Edge to use this tool.</p></div>';
+            document.body.innerHTML = '<div style="text-align: center; padding: 20px; color: red;"><h1>eab5c99e-4e22-4e3c-9e33-2f9d0b0f0e0f</h1><p>Please use a modern browser like Chrome, Firefox, or Edge to use this tool.</p></div>';
             throw new Error('Unsupported browser');
         }
 
@@ -447,7 +447,7 @@
         }
 
         function initParticles() {
-            for (let i = 0; i < 20; i++) { // Reduced for performance
+            for (let i = 0; i < 20; i++) {
                 particles.push(new Particle());
             }
         }
@@ -499,7 +499,10 @@
 
         videoInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (!file) return;
+            if (!file) {
+                status.textContent = 'No file selected';
+                return;
+            }
 
             const validFormats = ['video/mp4', 'video/webm', 'video/ogg'];
             if (!validFormats.includes(file.type)) {
@@ -513,14 +516,15 @@
 
             videoPlayer.onloadedmetadata = () => {
                 videoDuration = videoPlayer.duration;
-                if (videoDuration > 10800) {
-                    status.textContent = 'Error: Video exceeds 180 minute maximum length';
+                console.log(`Video duration: ${videoDuration} seconds`);
+                if (isNaN(videoDuration) || videoDuration <= 0) {
+                    status.textContent = 'Error: Invalid or corrupted video file';
                     videoPlayer.src = '';
                     videoInput.value = '';
                     return;
                 }
-                if (isNaN(videoDuration) || !videoPlayer.videoWidth) {
-                    status.textContent = 'Error: Invalid or unsupported video file';
+                if (videoDuration > 10800) {
+                    status.textContent = 'Error: Video exceeds 180 minute maximum length';
                     videoPlayer.src = '';
                     videoInput.value = '';
                     return;
@@ -536,7 +540,8 @@
             };
 
             videoPlayer.onerror = () => {
-                status.textContent = 'Error: Failed to load video. Try a different format.';
+                console.error('Video load error:', videoPlayer.error);
+                status.textContent = 'Error: Failed to load video. Try a different format or check the file.';
                 videoPlayer.src = '';
                 videoInput.value = '';
             };
@@ -565,12 +570,17 @@
             const startTime = (startHours * 3600) + (startMinutes * 60) + startSeconds;
             const endTime = (endHours * 3600) + (endMinutes * 60) + endSeconds;
 
+            console.log(`Validating inputs: startTime=${startTime}, endTime=${endTime}, duration=${videoDuration}`);
             if (startTime >= endTime) {
                 status.textContent = 'Error: Start time must be less than end time';
                 return false;
             }
             if (endTime > videoDuration) {
                 status.textContent = `Error: End time exceeds video duration (${Math.floor(videoDuration)} seconds)`;
+                return false;
+            }
+            if (frameIntervalInput.value < 0.1 || frameIntervalInput.value > 10) {
+                status.textContent = 'Error: Frame interval must be between 0.1 and 10 seconds';
                 return false;
             }
             return true;
@@ -582,14 +592,19 @@
         endHoursInput.addEventListener('input', validateInputs);
         endMinutesInput.addEventListener('input', validateInputs);
         endSecondsInput.addEventListener('input', validateInputs);
+        frameIntervalInput.addEventListener('input', validateInputs);
 
         async function processVideo() {
             if (!videoBlob) {
                 status.textContent = 'Please select a video first';
+                console.error('No video blob available');
                 return;
             }
 
-            if (!validateInputs()) return;
+            if (!validateInputs()) {
+                console.error('Input validation failed');
+                return;
+            }
 
             const startHours = parseInt(startHoursInput.value) || 0;
             const startMinutes = parseInt(startMinutesInput.value) || 0;
@@ -599,8 +614,20 @@
             const endSeconds = parseInt(endSecondsInput.value) || 0;
             const frameInterval = parseFloat(frameIntervalInput.value) || 1;
             const jpegQuality = parseFloat(jpegQualityInput.value) || 0.95;
-            const duration = (endHours * 3600) + (endMinutes * 60) + endSeconds - ((startHours * 3600) + (startMinutes * 60) + startSeconds);
+            const startTime = (startHours * 3600) + (startMinutes * 60) + startSeconds;
+            const endTime = (endHours * 3600) + (endMinutes * 60) + endSeconds;
+            const duration = endTime - startTime;
             const totalFrames = Math.floor(duration / frameInterval);
+
+            console.log(`Processing video: start=${startTime}s, end=${endTime}s, interval=${frameInterval}s, totalFrames=${totalFrames}`);
+
+            if (totalFrames > 1000) {
+                const confirm = window.confirm(`Extracting ${totalFrames} frames may be slow. Continue?`);
+                if (!confirm) {
+                    status.textContent = 'Processing cancelled';
+                    return;
+                }
+            }
 
             frameContainer.innerHTML = '';
             frames = [];
@@ -611,30 +638,44 @@
 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d', { alpha: false });
-            const maxDimension = 1920; // Limit for performance
+            const maxDimension = 1920;
             const aspectRatio = videoPlayer.videoWidth / videoPlayer.videoHeight;
             canvas.width = Math.min(videoPlayer.videoWidth, maxDimension);
             canvas.height = canvas.width / aspectRatio;
 
             try {
-                for (let i = 0; i <= totalFrames; i++) {
-                    const time = (startHours * 3600) + (startMinutes * 60) + startSeconds + (i * frameInterval);
-                    if (time > ((endHours * 3600) + (endMinutes * 60) + endSeconds)) break;
+                // Ensure video is ready
+                if (videoPlayer.readyState < 2) {
+                    await new Promise(resolve => {
+                        videoPlayer.oncanplay = () => resolve();
+                    });
+                }
 
+                for (let i = 0; i <= totalFrames; i++) {
+                    const time = startTime + (i * frameInterval);
+                    if (time > endTime) break;
+
+                    console.log(`Seeking to time: ${time}s`);
                     videoPlayer.currentTime = time;
 
-                    await new Promise(resolve => {
-                        videoPlayer.onseeked = () => resolve();
-                        videoPlayer.onerror = () => {
-                            status.textContent = 'Error: Failed to seek video';
-                            loader.classList.remove('active');
-                            progressBar.parentElement.classList.remove('active');
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            reject(new Error(`Timeout seeking to ${time}s`));
+                        }, 5000);
+
+                        videoPlayer.onseeked = () => {
+                            clearTimeout(timeout);
                             resolve();
+                        };
+                        videoPlayer.onerror = () => {
+                            clearTimeout(timeout);
+                            reject(new Error('Error during video seek'));
                         };
                     });
 
                     ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
                     const imageData = canvas.toDataURL('image/jpeg', jpegQuality);
+                    console.log(`Frame captured at ${time}s`);
 
                     const frameDiv = document.createElement('div');
                     frameDiv.className = 'frame-item';
@@ -670,6 +711,7 @@
                 progressBar.parentElement.classList.remove('active');
                 downloadAllBtn.style.display = 'block';
             } catch (error) {
+                console.error('Processing error:', error);
                 status.textContent = `Error: ${error.message}`;
                 status.classList.remove('processing');
                 loader.classList.remove('active');
@@ -703,6 +745,7 @@
                 document.body.removeChild(link);
                 URL.revokeObjectURL(link.href);
             } catch (error) {
+                console.error('ZIP creation error:', error);
                 status.textContent = `Error creating ZIP: ${error.message}`;
             }
         }
