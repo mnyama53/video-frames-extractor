@@ -19,13 +19,13 @@
             --progress-bg: #404040;
             --progress-fill: #4a6fa5;
         }
-        
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             background-color: var(--primary-bg);
             color: var(--text-color);
@@ -509,19 +509,19 @@
             .container {
                 padding: 20px;
             }
-            
+
             h1 {
                 font-size: 2.2rem;
             }
-            
+
             .controls-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .panel {
                 padding: 20px;
             }
-            
+
             #frameContainer {
                 grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             }
@@ -530,6 +530,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<base target="_blank">
 </head>
 <body>
     <canvas id="particles" aria-hidden="true"></canvas>
@@ -538,7 +539,7 @@
             <h1><i class="fas fa-film"></i> Video Frame Extractor</h1>
             <p class="subtitle">Extract frames from videos up to 180 minutes with ease - 100% browser-based</p>
         </header>
-        
+
         <div class="features">
             <div class="feature-card">
                 <div class="feature-icon">
@@ -562,38 +563,38 @@
                 <p class="feature-desc">Download individual frames or all frames as a ZIP archive</p>
             </div>
         </div>
-        
+
         <div class="panel">
             <h2 class="panel-title"><i class="fas fa-sliders-h"></i> Extraction Settings</h2>
-            
+
             <div class="controls-grid">
                 <div class="control-group">
                     <label for="videoInput">Upload Video</label>
                     <input type="file" id="videoInput" accept="video/*">
                     <div class="input-hint">Supports MP4, WebM, MOV, AVI, and more</div>
                 </div>
-                
+
                 <div class="control-group">
                     <label for="startTime">Start Time <span class="tooltip">(HH:MM:SS)
                         <span class="tooltip-text">Enter the start time in hours, minutes, and seconds format</span>
                     </span></label>
                     <input type="text" id="startTime" placeholder="00:00:00" value="00:00:00">
                 </div>
-                
+
                 <div class="control-group">
                     <label for="endTime">End Time <span class="tooltip">(HH:MM:SS)
                         <span class="tooltip-text">Enter the end time in hours, minutes, and seconds format</span>
                     </span></label>
                     <input type="text" id="endTime" placeholder="00:00:00">
                 </div>
-                
+
                 <div class="control-group">
                     <label for="frameInterval">Frame Interval (seconds)</label>
                     <input type="number" id="frameInterval" min="0.1" max="60" step="0.1" value="1">
                     <div class="input-hint">Extract a frame every 0.1 to 60 seconds</div>
                 </div>
             </div>
-            
+
             <div class="buttons">
                 <button id="extractBtn" onclick="processVideo()">
                     <i class="fas fa-cogs"></i> Extract Frames
@@ -609,7 +610,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div id="videoContainer">
             <video id="videoPlayer" controls></video>
             <div class="video-overlay">
@@ -618,22 +619,22 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="status">
             <div>Upload a video to begin frame extraction</div>
         </div>
-        
+
         <progress id="progressBar" value="0" max="100" style="display:none;"></progress>
-        
+
         <div class="section-header">
             <h2 class="section-title"><i class="fas fa-images"></i> Extracted Frames</h2>
             <div id="frameCount">0 frames extracted</div>
         </div>
-        
+
         <div id="frameContainer">
             <!-- Frames will appear here -->
         </div>
-        
+
         <div class="instructions">
             <h2 class="panel-title"><i class="fas fa-info-circle"></i> How to Use</h2>
             <ol>
@@ -644,7 +645,7 @@
                 <li>Preview and download individual frames or download all frames as a ZIP file</li>
             </ol>
         </div>
-        
+
         <footer>
             <p>Video Frame Extractor v2.0 | 100% Browser-Based | No Server Processing | All Rights Reserved</p>
             <p>Works with Chrome, Firefox, Edge, and Safari</p>
@@ -657,7 +658,7 @@
         const particleCtx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        
+
         const particles = [];
         class Particle {
             constructor() {
@@ -680,41 +681,41 @@
                 particleCtx.fill();
             }
         }
-        
+
         function initParticles() {
             for (let i = 0; i < 100; i++) {
                 particles.push(new Particle());
             }
         }
-        
+
         function animateParticles() {
             particleCtx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update();
                 particles[i].draw();
-                
+
                 if (particles[i].size <= 0.2) {
                     particles.splice(i, 1);
                     i--;
                 }
             }
-            
+
             if (particles.length < 100) {
                 particles.push(new Particle());
             }
-            
+
             requestAnimationFrame(animateParticles);
         }
-        
+
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
-        
+
         initParticles();
         animateParticles();
-        
+
         // Video Processing
         const videoInput = document.getElementById('videoInput');
         const videoPlayer = document.getElementById('videoPlayer');
@@ -729,12 +730,12 @@
         const progressBar = document.getElementById('progressBar');
         const frameCount = document.getElementById('frameCount');
         const resetBtn = document.getElementById('resetBtn');
-        
+
         let videoBlob;
         let videoDuration = 0;
         let extractionActive = false;
         let extractedFrames = [];
-        
+
         // Initialize app
         function initApp() {
             videoInput.value = '';
@@ -752,7 +753,7 @@
             status.innerHTML = '<div>Upload a video to begin frame extraction</div>';
             extractBtn.disabled = false;
         }
-        
+
         // Reset app
         function resetApp() {
             if (extractionActive) {
@@ -760,7 +761,7 @@
             }
             initApp();
         }
-        
+
         // Cancel extraction
         function cancelExtraction() {
             extractionActive = false;
@@ -769,64 +770,64 @@
             status.innerHTML = '<div>Extraction canceled</div>';
             progressBar.style.display = 'none';
         }
-        
+
         // Convert HH:MM:SS to seconds
         function timeToSeconds(timeStr) {
             if (!timeStr) return 0;
-            
+
             const parts = timeStr.split(':');
             if (parts.length !== 3) return 0;
-            
+
             const hours = parseInt(parts[0]) || 0;
             const minutes = parseInt(parts[1]) || 0;
             const seconds = parseInt(parts[2]) || 0;
-            
+
             return hours * 3600 + minutes * 60 + seconds;
         }
-        
+
         // Convert seconds to HH:MM:SS
         function secondsToTime(seconds) {
             const hrs = Math.floor(seconds / 3600);
             const mins = Math.floor((seconds % 3600) / 60);
             const secs = Math.floor(seconds % 60);
-            
+
             return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
-        
+
         // Handle video upload
         videoInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
+
             try {
                 // Reset previous state
                 initApp();
-                
+
                 // Validate file type
                 if (!file.type.startsWith('video/')) {
                     status.innerHTML = '<div style="color:#ff6b6b;">Please select a valid video file</div>';
                     return;
                 }
-                
+
                 // Check file size (max 2GB)
                 if (file.size > 2 * 1024 * 1024 * 1024) {
                     status.innerHTML = '<div style="color:#ff6b6b;">Video file is too large (max 2GB)</div>';
                     return;
                 }
-                
+
                 status.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Loading video...</div>';
-                
+
                 videoBlob = URL.createObjectURL(file);
                 videoPlayer.src = videoBlob;
-                
+
                 // Wait for video to load metadata
                 await new Promise((resolve, reject) => {
                     videoPlayer.onloadedmetadata = resolve;
                     videoPlayer.onerror = reject;
                 });
-                
+
                 videoDuration = videoPlayer.duration;
-                
+
                 // Validate video length (max 180 minutes)
                 if (videoDuration > 10800) {
                     status.innerHTML = `<div style="color:#ff6b6b;">Video exceeds 180 minute limit (${Math.floor(videoDuration/60)} minutes)</div>`;
@@ -834,63 +835,63 @@
                     videoInput.value = '';
                     return;
                 }
-                
+
                 // Set end time to video duration
                 endTimeInput.value = secondsToTime(videoDuration);
-                
+
                 status.innerHTML = `<div>Video loaded: ${file.name} (${Math.floor(videoDuration)} seconds)</div>`;
                 extractBtn.disabled = false;
-                
+
             } catch (error) {
                 status.innerHTML = `<div style="color:#ff6b6b;">Error loading video: ${error.message}</div>`;
                 console.error('Video loading error:', error);
             }
         });
-        
+
         // Process video and extract frames
         async function processVideo() {
             if (!videoBlob) {
                 status.innerHTML = '<div style="color:#ff6b6b;">Please select a video first</div>';
                 return;
             }
-            
+
             const startTimeStr = startTimeInput.value;
             const endTimeStr = endTimeInput.value;
             const startTime = timeToSeconds(startTimeStr);
             const endTime = timeToSeconds(endTimeStr);
             const frameInterval = parseFloat(frameIntervalInput.value);
-            
+
             // Validate inputs
             if (isNaN(startTime) || isNaN(endTime) || isNaN(frameInterval)) {
                 status.innerHTML = '<div style="color:#ff6b6b;">Please enter valid time values</div>';
                 return;
             }
-            
+
             if (startTime >= endTime) {
                 status.innerHTML = '<div style="color:#ff6b6b;">Start time must be before end time</div>';
                 return;
             }
-            
+
             if (endTime > videoDuration) {
                 status.innerHTML = `<div style="color:#ff6b6b;">End time exceeds video duration (${Math.floor(videoDuration)} seconds)</div>`;
                 return;
             }
-            
+
             if (frameInterval < 0.1 || frameInterval > 60) {
                 status.innerHTML = '<div style="color:#ff6b6b;">Frame interval must be between 0.1 and 60 seconds</div>';
                 return;
             }
-            
+
             // Calculate extraction parameters
             const extractionDuration = endTime - startTime;
             const totalFrames = Math.ceil(extractionDuration / frameInterval);
-            
+
             if (totalFrames > 500) {
                 if (!confirm(`This will extract approximately ${totalFrames} frames. This may take a while and use significant memory. Continue?`)) {
                     return;
                 }
             }
-            
+
             // Setup UI for extraction
             frameContainer.innerHTML = '';
             extractedFrames = [];
@@ -898,32 +899,32 @@
             cancelBtn.style.display = 'inline-flex';
             extractBtn.disabled = true;
             extractionActive = true;
-            
+
             status.innerHTML = `<div><i class="fas fa-spinner fa-spin"></i> Preparing to extract ${totalFrames} frames...</div>`;
             progressBar.style.display = 'block';
             progressBar.value = 0;
-            
+
             try {
                 // Create offscreen canvas for better performance
                 const offscreenCanvas = document.createElement('canvas');
                 const offscreenCtx = offscreenCanvas.getContext('2d');
-                
+
                 // Process frames sequentially to avoid browser freezing
                 for (let i = 0; i < totalFrames; i++) {
                     if (!extractionActive) break;
-                    
+
                     const time = startTime + (i * frameInterval);
                     if (time > endTime) break;
-                    
+
                     // Update progress
                     const progress = Math.round((i / totalFrames) * 100);
                     progressBar.value = progress;
                     status.innerHTML = `<div><i class="fas fa-spinner fa-spin"></i> Extracting frames: ${progress}% complete</div>
                                          <div>Frame ${i+1} of ${totalFrames} at ${secondsToTime(time)}</div>`;
-                    
+
                     // Seek to the specified time
                     videoPlayer.currentTime = time;
-                    
+
                     // Wait for the seek to complete
                     await new Promise(resolve => {
                         const onSeeked = () => {
@@ -932,49 +933,49 @@
                         };
                         videoPlayer.addEventListener('seeked', onSeeked);
                     });
-                    
+
                     // Draw frame to canvas
                     offscreenCanvas.width = videoPlayer.videoWidth;
                     offscreenCanvas.height = videoPlayer.videoHeight;
                     offscreenCtx.drawImage(videoPlayer, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
-                    
+
                     // Get image data
                     const imageData = offscreenCanvas.toDataURL('image/jpeg', 0.9);
                     extractedFrames.push({time, imageData});
-                    
+
                     // Create frame element
                     const frameDiv = document.createElement('div');
                     frameDiv.className = 'frame-item';
-                    
+
                     const img = document.createElement('img');
                     img.src = imageData;
                     img.alt = `Video frame at ${secondsToTime(time)}`;
                     img.className = 'frame-image';
-                    
+
                     const detailsDiv = document.createElement('div');
                     detailsDiv.className = 'frame-details';
-                    
+
                     const timeLabel = document.createElement('div');
                     timeLabel.className = 'frame-time';
                     timeLabel.textContent = secondsToTime(time);
-                    
+
                     const actionsDiv = document.createElement('div');
                     actionsDiv.className = 'frame-actions';
-                    
+
                     const downloadBtn = document.createElement('button');
                     downloadBtn.textContent = 'Download';
                     downloadBtn.className = 'action-btn';
                     downloadBtn.onclick = () => downloadFrame(imageData, time);
-                    
+
                     actionsDiv.appendChild(downloadBtn);
                     detailsDiv.appendChild(timeLabel);
                     detailsDiv.appendChild(actionsDiv);
-                    
+
                     frameDiv.appendChild(img);
                     frameDiv.appendChild(detailsDiv);
                     frameContainer.appendChild(frameDiv);
                 }
-                
+
                 if (!extractionActive) {
                     status.innerHTML = '<div>Extraction canceled</div>';
                 } else {
@@ -982,7 +983,7 @@
                     downloadAllBtn.style.display = 'inline-flex';
                     frameCount.textContent = `${extractedFrames.length} frames extracted`;
                 }
-                
+
             } catch (error) {
                 status.innerHTML = `<div style="color:#ff6b6b;">Error: ${error.message}</div>`;
                 console.error('Frame extraction error:', error);
@@ -993,7 +994,7 @@
                 progressBar.style.display = 'none';
             }
         }
-        
+
         // Download individual frame
         function downloadFrame(imageData, time) {
             const link = document.createElement('a');
@@ -1001,47 +1002,47 @@
             link.href = imageData;
             link.click();
         }
-        
+
         // Download all frames as ZIP
         async function downloadAllFrames() {
             if (extractedFrames.length === 0) {
                 status.innerHTML = '<div style="color:#ff6b6b;">No frames to download</div>';
                 return;
             }
-            
+
             status.innerHTML = `<div><i class="fas fa-spinner fa-spin"></i> Creating ZIP file with ${extractedFrames.length} frames...</div>`;
-            
+
             try {
                 const zip = new JSZip();
                 const folder = zip.folder('video_frames');
-                
+
                 // Add each frame to the ZIP
                 extractedFrames.forEach((frame, index) => {
                     const base64Data = frame.imageData.split(',')[1];
                     folder.file(`frame_${secondsToTime(frame.time).replace(/:/g, '-')}.jpg`, base64Data, {base64: true});
                 });
-                
+
                 // Generate ZIP file
                 const content = await zip.generateAsync({type: 'blob'});
-                
+
                 // Download the ZIP
                 saveAs(content, 'video_frames.zip');
-                
+
                 status.innerHTML = `<div style="color:#4caf50;"><i class="fas fa-check-circle"></i> ZIP file downloaded successfully!</div>`;
-                
+
             } catch (error) {
                 status.innerHTML = `<div style="color:#ff6b6b;">Error creating ZIP: ${error.message}</div>`;
                 console.error('ZIP creation error:', error);
             }
         }
-        
+
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (videoBlob) {
                 URL.revokeObjectURL(videoBlob);
             }
         });
-        
+
         // Initialize the app
         initApp();
     </script>
